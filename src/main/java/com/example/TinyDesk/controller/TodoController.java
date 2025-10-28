@@ -30,14 +30,14 @@ public class TodoController {
             return ResponseEntity.ok(todo);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Title is required"));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
     @PutMapping("/{id}/toggle")
     public ResponseEntity<?> toggle(@PathVariable Long id) {
         return service.toggle(id)
-                .map(ResponseEntity::ok)
+                .map(todo -> ResponseEntity.ok((Object) todo))
                 .orElse(ResponseEntity.status(404)
                         .body(Map.of("error", "Not found")));
     }
