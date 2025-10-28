@@ -45,14 +45,16 @@ class TodoServiceTest {
     @Test
     void toggleExistingTodo() {
         Todo todo = service.create("Test task");
+        Long todoId = todo.getId();
         
-        Optional<Todo> toggled = service.toggle(todo.getId());
+        Optional<Todo> toggled = service.toggle(todoId);
         
         assertTrue(toggled.isPresent());
         assertTrue(toggled.get().isDone());
         
-        service.toggle(todo.getId());
-        assertFalse(toggled.get().isDone());
+        Optional<Todo> toggledAgain = service.toggle(todoId);
+        assertTrue(toggledAgain.isPresent());
+        assertFalse(toggledAgain.get().isDone());
     }
 
     @Test

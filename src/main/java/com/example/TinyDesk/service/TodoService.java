@@ -2,81 +2,38 @@ package com.example.TinyDesk.service;
 
 import com.example.TinyDesk.model.Todo;
 import com.example.TinyDesk.repository.TodoRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+@Service
+public class TodoService {
+    private final TodoRepository repository;
 
-class TodoServiceTest {
-    private TodoService service;
-    private TodoRepository repository;
-
-    @BeforeEach
-    void setUp() {
-        repository = new TodoRepository();
-        service = new TodoService(repository);
+    public TodoService(TodoRepository repository) {
+        this.repository = repository;
     }
 
-    @Test
-    void createWithValidTitle() {
-        Todo todo = service.create("Learn Spring Boot");
-        
-        assertNotNull(todo.getId());
-        assertEquals("Learn Spring Boot", todo.getTitle());
-        assertFalse(todo.isDone());
+    public List<Todo> findAll() {
+        return repository.findAll();
     }
 
-    @Test
-    void createWithShortTitle() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            service.create("ab");
-        });
+    public Todo create(String title) {
+        if (title == null || title.trim().length() < 3) {
+            throw new IllegalArgumentException("Title must be at least 3 characters");
+        }
+        Todo todo = new Todo(null, title.trim(), false);
+        return repository.save(todo);
     }
 
-    @Test
-    void createWithEmptyTitle() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            service.create("");
-        });
+    public Optional<Todo> toggle(Long id) {
+        Optional<Todo> todoOpt = repository.findById(id);
+        todoOpt.ifPresent(todo -> todo.setDone(!todo.isDone()));
+        return todoOpt;
     }
 
-    @Test
-    void toggleExistingTodo() {
-        Todo todo = service.create("Test task");
-        
-        Optional<Todo> toggled = service.toggle(todo.getId());
-        
-        assertTrue(toggled.isPresent());
-        assertTrue(toggled.get().isDone());
-        
-        Optional<Todo> toggledAgain = service.toggle(todo.getId());
-        assertTrue(toggledAgain.isPresent());
-        assertFalse(toggledAgain.get().isDone());
-    }
-
-    @Test
-    void toggleNonExistingTodo() {
-        Optional<Todo> result = service.toggle(999L);
-        
-        assertFalse(result.isPresent());
-    }
-
-    @Test
-    void deleteExistingTodo() {
-        Todo todo = service.create("Task to delete");
-        
-        boolean deleted = service.delete(todo.getId());
-        
-        assertTrue(deleted);
-        assertEquals(0, service.findAll().size());
-    }
-
-    @Test
-    void deleteNonExistingTodo() {
-        boolean deleted = service.delete(999L);
-        
-        assertFalse(deleted);
+    public boolean delete(Long id) {
+        return repository.deleteById(id);
     }
 }
